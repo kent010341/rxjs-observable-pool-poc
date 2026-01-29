@@ -21,12 +21,12 @@ export class Main {
 
     /** submitters, the number is greater than pool size, and some cause errors */
     readonly submitters: SubmitterConfig[] = [
-        { sleepTime: 2000 },
-        { sleepTime: 1500, error: true },
-        { sleepTime: 3000 },
+        { sleepTime: 500 },
+        { sleepTime: 1000, error: true },
         { sleepTime: 1000 },
-        { sleepTime: 2500, error: true },
-        { sleepTime: 1200 },
+        { sleepTime: 500 },
+        { sleepTime: 300 },
+        { sleepTime: 300 },
     ];
 
 }

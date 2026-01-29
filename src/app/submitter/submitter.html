@@ -1,6 +1,9 @@
 @let state = readyState();
 <div [class]="state">
     @switch (state) {
+        @case ('pending') {
+            <h1>Pending...</h1>
+        }
         @case('ready') {
             <h1>Ready!</h1>
         }
@@ -11,4 +14,18 @@
             <h1>Error!</h1>
         }
     }
+    <div class="time">
+        @if (startTime(); as startTime) {
+            <div>
+                <span>Start:</span>
+                <span>{{ startTime | date:'HH:mm:ss.SSS' }}</span>
+            </div>
+        }
+        @if (endTime(); as endTime) {
+            <div>
+                <span>End:</span>
+                <span>{{ endTime | date:'HH:mm:ss.SSS' }}</span>
+            </div>
+        }
+    </div>
 </div>
