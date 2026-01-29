@@ -1,59 +1,85 @@
-# RxjsObservablePoolPoc
+# RxJS Observable Pool POC
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.1.4.
+This project is a Proof of Concept (POC) for an `ObservablePool` service in Angular. It demonstrates how to manage and limit the number of concurrent observable-based tasks using RxJS.
 
-## Development server
+## Core Concept
 
-To start a local development server, run:
+The `ObservablePool` service ensures that the number of simultaneously running tasks (like HTTP requests or other async operations) does not exceed a specified limit (`poolSize`). Tasks are queued and executed as soon as a slot in the pool becomes available.
 
-```bash
-ng serve
+This is primarily achieved using the `mergeMap` operator from RxJS with its concurrency parameter.
+
+## Key Features
+
+- **Concurrency Management**: Limits the number of active observable subscriptions.
+- **Task Queuing**: Automatically queues tasks when the pool is full and executes them in order.
+- **Configurable**: The pool size can be easily configured through an Angular `InjectionToken`.
+- **Error Resilience**: An error in one task does not break the entire pool; other tasks will continue to be processed.
+
+## How to Use
+
+### 1. The `ObservablePool` Service
+
+The core logic resides in [`src/app/core/concurrency/observable-pool.ts`](./src/app/core/concurrency/observable-pool.ts).
+
+To use it, inject `ObservablePool` into your component or service and pass your observable-based task to the `run()` method.
+
+```typescript
+import { Component, inject } from '@angular/core';
+import { ObservablePool } from './core/concurrency/observable-pool';
+import { of, delay } from 'rxjs';
+
+@Component({ /* ... */ })
+export class MyComponent {
+    private readonly pool = inject(ObservablePool);
+
+    runTask() {
+        const mySlowTask$ = of('done').pipe(delay(1000));
+
+        this.pool.run(mySlowTask$).subscribe(result => {
+            console.log(result); // done
+        });
+    }
+}
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+### 2. Configuration
 
-## Code scaffolding
+You can configure the `poolSize` by providing a value for the `OBSERVABLE_POOL_CONFIG` token in your component or module's providers array. The default size is 10.
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+```typescript
+import { Component } from '@angular/core';
+import { OBSERVABLE_POOL_CONFIG, ObservablePool } from './core/concurrency/observable-pool';
 
-```bash
-ng generate component component-name
+@Component({
+  selector: 'app-my-component',
+  // ...
+  providers: [
+    {
+      provide: OBSERVABLE_POOL_CONFIG,
+      useValue: { poolSize: 3 } // Set concurrency limit to 3
+    },
+    ObservablePool
+  ]
+})
+export class MyComponent {
+  // ...
+}
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Running the Demo
 
-```bash
-ng generate --help
-```
+This repository includes a demo application that visualizes the pool's behavior with a `poolSize` of 2.
 
-## Building
+1.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
 
-To build the project run:
+2.  **Run the application:**
+    ```bash
+    ng serve
+    ```
 
-```bash
-ng build
-```
+3.  Open your browser to [`http://localhost:4200/`](http://localhost:4200/).
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+The demo showcases several scenarios, including parallel execution, replenishment on success/error, and concurrent completion. You can observe the start and end times of each task to verify the pool's logic.
