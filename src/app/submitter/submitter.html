@@ -1,0 +1,14 @@
+@let state = readyState();
+<div [class]="state">
+    @switch (state) {
+        @case('ready') {
+            <h1>Ready!</h1>
+        }
+        @case('loading') {
+            <h1>Loading...</h1>
+        }
+        @case('error') {
+            <h1>Error!</h1>
+        }
+    }
+</div>

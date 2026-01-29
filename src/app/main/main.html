@@ -1,0 +1,8 @@
+<div class="submitters">
+    @for (s of submitters; track s) {
+        <app-submitter 
+            [sleepTime]="s.sleepTime" 
+            [error]="!!s.error">
+        </app-submitter>
+    }
+</div>
