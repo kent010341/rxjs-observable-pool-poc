@@ -1,4 +1,4 @@
-import { Component, inject, input, OnInit, signal } from '@angular/core';
+import { Component, inject, input, OnInit, output, signal } from '@angular/core';
 import { defer, delay, of, tap } from 'rxjs';
 import { ObservablePool } from '../core/concurrency/observable-pool';
 import { DatePipe } from '@angular/common';
@@ -19,6 +19,10 @@ export class Submitter implements OnInit {
 
     readonly error = input<boolean>(false);
 
+    readonly start = output<void>();
+
+    readonly stop = output<void>();
+
     protected readonly readyState = signal<'pending' | 'loading' | 'ready' | 'error'>('pending');
 
     protected readonly startTime = signal<number | undefined>(undefined);
@@ -26,9 +30,17 @@ export class Submitter implements OnInit {
     protected readonly endTime = signal<number | undefined>(undefined);
 
     private readonly somethingSlow$ = defer(() => of(null).pipe(
-        tap(() => {
-            this.readyState.set('loading');
-            this.startTime.set(Date.now());
+        tap({
+            next: () => {
+                this.readyState.set('loading');
+                this.startTime.set(Date.now());
+            },
+            subscribe: () => {
+                this.start.emit();
+            },
+            unsubscribe: () => {
+                this.stop.emit()
+            },
         }),
         // Simulate a slow operation
         delay(this.sleepTime()),
@@ -36,6 +48,10 @@ export class Submitter implements OnInit {
             if (this.error()) {
                 throw new Error('Simulated error');
             }
+        }),
+        tap({
+            next: () => this.stop.emit(),
+            error: () => this.stop.emit(),
         }),
     ));
 
@@ -55,6 +71,8 @@ export class Submitter implements OnInit {
 }
 
 export interface SubmitterConfig {
+
+    readonly key: string;
 
     readonly sleepTime: number;
 

@@ -2,7 +2,18 @@
     @for (s of submitters; track s) {
         <app-submitter 
             [sleepTime]="s.sleepTime" 
-            [error]="!!s.error">
+            [error]="!!s.error"
+            (start)="writeStartLog(s.key)"
+            (stop)="writeStopLog(s.key)">
         </app-submitter>
+    }
+</div>
+
+<div class="logs">
+    <h2>Logs</h2>
+    @for (log of logs(); track log) {
+        <div class="log-entry">
+            {{ log }}
+        </div>
     }
 </div>
